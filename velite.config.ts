@@ -1,0 +1,145 @@
+import { defineCollection, defineConfig, s } from "velite";
+import type {
+  SyllabusNodeRef,
+  Locale,
+} from "./src/content-engine/domain/content";
+
+// ------------types declaration section------------
+
+type ContentForValidation = {
+  contentId: string;
+  locale: Locale;
+  path: string;
+  syllabusRefs: SyllabusNodeRef[];
+};
+
+//----------------- Compare syllabus references across locale variants----------------------------
+function areSyllabusRefsEqual(
+  a: SyllabusNodeRef[],
+  b: SyllabusNodeRef[],
+): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return a.every((ref, index) => {
+    return ref.exam === b[index].exam && ref.path === b[index].path;
+  });
+}
+
+// ---------functions to validate unique content id---( Collection-level content integrity validation)-------------
+function getContentFolder(path: string): string {
+  return path.replace(/\/page(?:\.hi)?$/, "");
+}
+
+function validateContentIntegrity(contents: ContentForValidation[]): void {
+  const contentIdToFolder = new Map<string, string>();
+  const folderToContentId = new Map<string, string>();
+  const seenVariants = new Set<string>();
+  const contentIdToSyllabusRefs = new Map<string, SyllabusNodeRef[]>();
+
+  for (const content of contents) {
+    const folder = getContentFolder(content.path);
+    const variantKey = `${content.contentId}:${content.locale}`;
+
+    // Rule 1: one contentId belongs to only one folder.
+    const existingFolder = contentIdToFolder.get(content.contentId);
+
+    if (existingFolder && existingFolder !== folder) {
+      throw new Error(
+        `Content ID "${content.contentId}" is used in multiple folders:
+- ${existingFolder}
+- ${folder}`,
+      );
+    }
+
+    contentIdToFolder.set(content.contentId, folder);
+
+    // Rule 2: one folder belongs to only one contentId.
+    const existingContentId = folderToContentId.get(folder);
+
+    if (existingContentId && existingContentId !== content.contentId) {
+      throw new Error(
+        `Folder "${folder}" contains multiple content IDs:
+- ${existingContentId}
+- ${content.contentId}`,
+      );
+    }
+
+    folderToContentId.set(folder, content.contentId);
+
+    // Rule 3: each contentId + locale combination must be unique.
+    if (seenVariants.has(variantKey)) {
+      throw new Error(`Duplicate content variant: "${variantKey}"`);
+    }
+
+    // Rule 4: same contentId → same syllabusRefs (all locale variants of the same contentId must have identical syllabus references.)
+    const existingRefs = contentIdToSyllabusRefs.get(content.contentId);
+
+    if (
+      existingRefs &&
+      !areSyllabusRefsEqual(existingRefs, content.syllabusRefs)
+    ) {
+      throw new Error(
+        `Content ID "${content.contentId}" has inconsistent syllabus references across locale variants.`,
+      );
+    }
+
+    if (!existingRefs) {
+      contentIdToSyllabusRefs.set(content.contentId, content.syllabusRefs);
+    }
+
+    seenVariants.add(variantKey);
+  }
+}
+
+// ------------helper function- decide hindi/english version of content------------
+
+const getLocaleFromPath = (path: string): Locale => {
+  if (path.endsWith("/page.hi")) {
+    return "hi";
+  }
+  if (path.endsWith("/page")) {
+    return "en";
+  }
+  throw new Error(
+    `Invalid content filename: "${path}". Expected page.mdx or page.hi.mdx.`,
+  );
+};
+
+// --------------------------------main--------------
+const contents = defineCollection({
+  name: "Content",
+  pattern: "**/*.mdx",
+
+  schema: s
+    .object({
+      contentId: s.string(),
+      title: s.string(),
+      syllabusRefs: s.array(
+        s.object({
+          exam: s.string(),
+          path: s.string(),
+        }),
+      ),
+
+      path: s.path(),
+
+      body: s.mdx(),
+    })
+    .transform((data) => ({
+      ...data,
+      locale: getLocaleFromPath(data.path),
+    })),
+});
+
+export default defineConfig({
+  root: "content",
+
+  collections: {
+    contents,
+  },
+  prepare(data) {
+    validateContentIntegrity(data.contents); //for checking if contentid and folder structure is unique. (Collection-level integrity validation)
+  },
+});

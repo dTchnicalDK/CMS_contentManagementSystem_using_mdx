@@ -1,0 +1,28 @@
+[
+  {
+    "contentId": "history.indus-valley-civilization",
+    "title": "सिंधु घाटी सभ्यता",
+    "syllabusRefs": [
+      {
+        "exam": "BPSC",
+        "path": "history/ancient-india/indus-valley-civilization"
+      }
+    ],
+    "path": "history/ancient-india/indus-valley-civilization/page.hi",
+    "body": "const{Fragment:n,jsx:e,jsxs:t}=arguments[0];function _createMdxContent(r){const c={h1:\"h1\",p:\"p\",...r.components};return t(n,{children:[e(c.h1,{children:\"सिंधु घाटी सभ्यता\"}),\"\\n\",e(c.p,{children:\"सिंधु घाटी सभ्यता विश्व की सबसे प्राचीन नगरीय सभ्यताओं में से एक थी।\"})]})}return{default:function(n={}){const{wrapper:t}=n.components||{};return t?e(t,{...n,children:e(_createMdxContent,{...n})}):_createMdxContent(n)}};",
+    "locale": "hi"
+  },
+  {
+    "contentId": "history.indus-valley-civilization",
+    "title": "Indus Valley Civilization",
+    "syllabusRefs": [
+      {
+        "exam": "BPSC",
+        "path": "history/ancient-india/indus-valley-civilization"
+      }
+    ],
+    "path": "history/ancient-india/indus-valley-civilization/page",
+    "body": "const{Fragment:n,jsx:e,jsxs:t}=arguments[0];function _createMdxContent(i){const r={h1:\"h1\",p:\"p\",...i.components};return t(n,{children:[e(r.h1,{children:\"Indus Valley Civilization\"}),\"\\n\",e(r.p,{children:\"The Indus Valley Civilization was one of the earliest urban civilizations in the world.\"})]})}return{default:function(n={}){const{wrapper:t}=n.components||{};return t?e(t,{...n,children:e(_createMdxContent,{...n})}):_createMdxContent(n)}};",
+    "locale": "en"
+  }
+]
