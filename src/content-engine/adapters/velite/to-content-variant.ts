@@ -1,12 +1,6 @@
 import type { ContentVariant } from "../../domain/content";
 import type { Locale } from "../../domain/content";
-
-type VeliteContentDocument = {
-  contentId: string;
-  title: string;
-  body: string;
-  locale: Locale;
-};
+import type { VeliteContentDocument } from "./types";
 
 export function toContentVariant(
   document: VeliteContentDocument,

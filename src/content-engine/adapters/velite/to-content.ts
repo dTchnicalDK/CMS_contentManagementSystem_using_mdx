@@ -1,13 +1,6 @@
 import type { Content, Locale, SyllabusNodeRef } from "../../domain/content";
 import { toContentVariant } from "./to-content-variant";
-
-type VeliteContentDocument = {
-  contentId: string;
-  title: string;
-  body: string;
-  locale: Locale;
-  syllabusRefs: SyllabusNodeRef[];
-};
+import type { VeliteContentDocument } from "./types";
 
 export function toContents(documents: VeliteContentDocument[]): Content[] {
   const contentMap = new Map<string, Content>();
