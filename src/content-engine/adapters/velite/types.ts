@@ -1,3 +1,4 @@
+import { AssetReference } from "../../domain/asset";
 import type { Locale, SyllabusNodeRef } from "../../domain/content";
 
 export type VeliteContentDocument = {
@@ -6,4 +7,5 @@ export type VeliteContentDocument = {
   body: string;
   locale: Locale;
   syllabusRefs: SyllabusNodeRef[];
+  // assetRefs: AssetReference[];
 };

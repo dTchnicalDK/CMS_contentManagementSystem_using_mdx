@@ -123,6 +123,16 @@ const contents = defineCollection({
         }),
       ),
 
+      assetRefs: s
+        .array(
+          s.object({
+            assetId: s.string(),
+            order: s.number().default(0),
+            caption: s.string().optional(),
+          }),
+        )
+        .default([]),
+
       path: s.path(),
 
       body: s.mdx(),

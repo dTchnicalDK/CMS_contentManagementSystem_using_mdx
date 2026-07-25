@@ -1,3 +1,5 @@
+import { AssetReference } from "./asset";
+
 export type Locale = "en" | "hi";
 
 export type ContentBody = {
@@ -23,4 +25,6 @@ export type Content = {
   syllabusRefs: SyllabusNodeRef[];
 
   variants: Partial<Record<Locale, ContentVariant>>;
+
+  assetRefs: AssetReference[];
 };

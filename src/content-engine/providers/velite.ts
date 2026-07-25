@@ -1,3 +1,3 @@
-import { VeliteContentProvider } from "./velite-content-provider";
+// import { VeliteContentProvider } from "./velite-content-provider";
 
-export const contentProvider = new VeliteContentProvider();
+// export const contentProvider = new VeliteContentProvider();

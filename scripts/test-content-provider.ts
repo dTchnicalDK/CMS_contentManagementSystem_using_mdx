@@ -1,4 +1,6 @@
-import { contentProvider } from "../src/content-engine/providers/velite";
+import { VeliteContentProvider } from "@/src/content-engine/providers/velite-content-provider";
+
+const contentProvider = new VeliteContentProvider();
 
 async function main() {
   const contentId = "history.indus-valley-civilization";
