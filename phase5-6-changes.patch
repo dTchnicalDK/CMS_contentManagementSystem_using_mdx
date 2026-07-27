@@ -1,0 +1,295 @@
+diff --git a/scripts/new-asset.ts b/scripts/new-asset.ts
+new file mode 100644
+index 0000000..aa8922d
+--- /dev/null
++++ b/scripts/new-asset.ts
+@@ -0,0 +1,62 @@
++/**
++ * Scaffolds a new asset YAML file with a generated assetId
++ * (slug + short hash), so the id is never hand-typed.
++ *
++ * Usage:
++ *   npx tsx scripts/new-asset.ts "Harappa City Map" content/assets/history
++ */
++import { randomBytes } from "crypto";
++import { mkdirSync, writeFileSync, existsSync } from "fs";
++import path from "path";
++
++function slugify(title: string): string {
++  return title
++    .toLowerCase()
++    .trim()
++    .replace(/[^a-z0-9]+/g, "-")
++    .replace(/(^-|-$)/g, "");
++}
++
++function shortHash(): string {
++  return randomBytes(2).toString("hex"); // 4 hex chars
++}
++
++function main() {
++  const [, , title, targetDir] = process.argv;
++
++  if (!title || !targetDir) {
++    console.error(
++      'Usage: npx tsx scripts/new-asset.ts "<title>" <target-dir>',
++    );
++    process.exit(1);
++  }
++
++  const slug = slugify(title);
++  const assetId = `${slug}-${shortHash()}`;
++  const fileName = `${slug}.yml`;
++  const filePath = path.join(targetDir, fileName);
++
++  if (existsSync(filePath)) {
++    console.error(`❌ File already exists: ${filePath}`);
++    process.exit(1);
++  }
++
++  mkdirSync(targetDir, { recursive: true });
++
++  const yaml = `assetId: ${assetId}
++type: image
++title: "${title}"
++origin: manual
++resourceKey: "${path.join(path.relative("content/assets", targetDir), slug)}"
++metadata:
++  alt: ""
++  tags: []
++`;
++
++  writeFileSync(filePath, yaml);
++
++  console.log(`✅ Created ${filePath}`);
++  console.log(`   assetId: ${assetId}`);
++}
++
++main();
+diff --git a/src/content-engine/adapters/velite/to-asset.ts b/src/content-engine/adapters/velite/to-asset.ts
+new file mode 100644
+index 0000000..c66ea63
+--- /dev/null
++++ b/src/content-engine/adapters/velite/to-asset.ts
+@@ -0,0 +1,14 @@
++import type { Asset } from "../../domain/asset";
++import type { VeliteAssetDocument } from "./types";
++
++export function toAssets(documents: VeliteAssetDocument[]): Asset[] {
++  return documents.map((document) => ({
++    assetId: document.assetId,
++    type: document.type,
++    title: document.title,
++    description: document.description,
++    origin: document.origin,
++    resourceKey: document.resourceKey,
++    metadata: document.metadata,
++  }));
++}
+diff --git a/src/content-engine/adapters/velite/to-content.ts b/src/content-engine/adapters/velite/to-content.ts
+index 9e0ab07..0389f7e 100644
+--- a/src/content-engine/adapters/velite/to-content.ts
++++ b/src/content-engine/adapters/velite/to-content.ts
+@@ -22,7 +22,7 @@ export function toContents(documents: VeliteContentDocument[]): Content[] {
+       variants: {
+         [document.locale]: variant,
+       },
+-      assetRefs: [],
++      assetRefs: document.assetRefs,
+     };
+ 
+     contentMap.set(document.contentId, content);
+diff --git a/src/content-engine/adapters/velite/types.ts b/src/content-engine/adapters/velite/types.ts
+index d8bda9c..7225432 100644
+--- a/src/content-engine/adapters/velite/types.ts
++++ b/src/content-engine/adapters/velite/types.ts
+@@ -1,4 +1,5 @@
+ import { AssetReference } from "../../domain/asset";
++import type { AssetType, AssetOrigin, AssetMetadata } from "../../domain/asset";
+ import type { Locale, SyllabusNodeRef } from "../../domain/content";
+ 
+ export type VeliteContentDocument = {
+@@ -7,5 +8,15 @@ export type VeliteContentDocument = {
+   body: string;
+   locale: Locale;
+   syllabusRefs: SyllabusNodeRef[];
+-  // assetRefs: AssetReference[];
++  assetRefs: AssetReference[];
++};
++
++export type VeliteAssetDocument = {
++  assetId: string;
++  type: AssetType;
++  title: string;
++  description?: string;
++  origin: AssetOrigin;
++  resourceKey: string;
++  metadata: AssetMetadata;
+ };
+diff --git a/src/content-engine/providers/content-provider.ts b/src/content-engine/providers/content-provider.ts
+index 8c21e5e..a4bf386 100644
+--- a/src/content-engine/providers/content-provider.ts
++++ b/src/content-engine/providers/content-provider.ts
+@@ -1,7 +1,14 @@
+-import type { Content, ContentVariant, Locale } from "../domain/content";
++import type {
++  Content,
++  ContentVariant,
++  Locale,
++  SyllabusNodeRef,
++} from "../domain/content";
+ 
+ export interface ContentProvider {
+   getById(contentId: string, locale: Locale): Promise<ContentVariant | null>;
+ 
+   getContentById(contentId: string): Promise<Content | null>;
++
++  getBySyllabusRef(ref: SyllabusNodeRef): Promise<Content[]>;
+ }
+diff --git a/src/content-engine/providers/filesystem/filesystem-asset-provider.ts b/src/content-engine/providers/filesystem/filesystem-asset-provider.ts
+index ca1c453..5c35133 100644
+--- a/src/content-engine/providers/filesystem/filesystem-asset-provider.ts
++++ b/src/content-engine/providers/filesystem/filesystem-asset-provider.ts
+@@ -1,7 +1,25 @@
++import type { Asset } from "../../domain/asset";
++import { toAssets } from "../../adapters/velite/to-asset";
+ import { AssetProvider } from "../asset-provider";
++import { assets } from "@/.velite";
+ 
+ export class FilesystemAssetProvider implements AssetProvider {
+-  async getById(assetId: string) {
+-    return assetManifest[assetId] ?? null;
++  private readonly assets: Asset[];
++
++  private readonly assetIndex = new Map<string, Asset>();
++
++  constructor() {
++    this.assets = toAssets(assets);
++    this.buildAssetIndex();
++  }
++
++  private buildAssetIndex(): void {
++    for (const asset of this.assets) {
++      this.assetIndex.set(asset.assetId, asset);
++    }
++  }
++
++  async getById(assetId: string): Promise<Asset | null> {
++    return this.assetIndex.get(assetId) ?? null;
+   }
+ }
+diff --git a/src/content-engine/providers/velite-content-provider.ts b/src/content-engine/providers/velite-content-provider.ts
+index ea69518..2496c5d 100644
+--- a/src/content-engine/providers/velite-content-provider.ts
++++ b/src/content-engine/providers/velite-content-provider.ts
+@@ -87,4 +87,10 @@ export class VeliteContentProvider implements ContentProvider {
+   async getContentById(contentId: string): Promise<Content | null> {
+     return this.contentIndex.get(contentId) ?? null;
+   }
++
++  async getBySyllabusRef(ref: SyllabusNodeRef): Promise<Content[]> {
++    const key = this.getSyllabusKey(ref);
++
++    return this.syllabusIndex.get(key) ?? [];
++  }
+ }
+diff --git a/velite.config.ts b/velite.config.ts
+index f828260..800acc4 100644
+--- a/velite.config.ts
++++ b/velite.config.ts
+@@ -13,6 +13,11 @@ type ContentForValidation = {
+   syllabusRefs: SyllabusNodeRef[];
+ };
+ 
++type AssetForValidation = {
++  assetId: string;
++  path: string;
++};
++
+ //----------------- Compare syllabus references across locale variants----------------------------
+ function areSyllabusRefsEqual(
+   a: SyllabusNodeRef[],
+@@ -93,6 +98,28 @@ function validateContentIntegrity(contents: ContentForValidation[]): void {
+   }
+ }
+ 
++// ---------function to validate unique asset id---( Collection-level asset integrity validation)-------------
++function validateAssetIntegrity(assets: AssetForValidation[]): void {
++  const assetIdToPath = new Map<string, string>();
++
++  for (const asset of assets) {
++    const existingPath = assetIdToPath.get(asset.assetId);
++
++    // Rule: assetId must be globally unique. Since assetId is generated
++    // (slug + short hash) rather than hand-typed, a collision almost
++    // always means a file was copy-pasted without regenerating the id.
++    if (existingPath && existingPath !== asset.path) {
++      throw new Error(
++        `Duplicate asset ID "${asset.assetId}" found in:
++- ${existingPath}
++- ${asset.path}`,
++      );
++    }
++
++    assetIdToPath.set(asset.assetId, asset.path);
++  }
++}
++
+ // ------------helper function- decide hindi/english version of content------------
+ 
+ const getLocaleFromPath = (path: string): Locale => {
+@@ -143,13 +170,54 @@ const contents = defineCollection({
+     })),
+ });
+ 
++// --------------------------------assets--------------
++const assets = defineCollection({
++  name: "Asset",
++  pattern: "assets/**/*.yml",
++
++  schema: s.object({
++    assetId: s.string(),
++
++    type: s.enum([
++      "image",
++      "video",
++      "audio",
++      "document",
++      "timeline",
++      "concept-map",
++      "diagram",
++    ]),
++
++    title: s.string(),
++    description: s.string().optional(),
++
++    origin: s.enum(["manual", "ai-generated", "ai-assisted", "imported"]),
++
++    resourceKey: s.string(),
++
++    metadata: s
++      .object({
++        alt: s.string().optional(),
++        source: s.string().optional(),
++        author: s.string().optional(),
++        license: s.string().optional(),
++        tags: s.array(s.string()).optional(),
++      })
++      .default({}),
++
++    path: s.path(),
++  }),
++});
++
+ export default defineConfig({
+   root: "content",
+ 
+   collections: {
+     contents,
++    assets,
+   },
+   prepare(data) {
+     validateContentIntegrity(data.contents); //for checking if contentid and folder structure is unique. (Collection-level integrity validation)
++    validateAssetIntegrity(data.assets); //for checking assetId is globally unique. (Collection-level integrity validation)
+   },
+ });

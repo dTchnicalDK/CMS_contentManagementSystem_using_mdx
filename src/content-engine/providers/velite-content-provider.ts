@@ -87,4 +87,10 @@ export class VeliteContentProvider implements ContentProvider {
   async getContentById(contentId: string): Promise<Content | null> {
     return this.contentIndex.get(contentId) ?? null;
   }
+
+  async getBySyllabusRef(ref: SyllabusNodeRef): Promise<Content[]> {
+    const key = this.getSyllabusKey(ref);
+
+    return this.syllabusIndex.get(key) ?? [];
+  }
 }

@@ -1,0 +1,41 @@
+[
+  {
+    "assetId": "indus-great-bath-8da7",
+    "type": "video",
+    "title": "Indus Great Bath",
+    "origin": "manual",
+    "file": "indus-great-bath.mp4",
+    "metadata": {
+      "alt": "",
+      "tags": []
+    },
+    "path": "history/ancient-india/indus-valley-civilization/assets/indus-great-bath",
+    "resourceKey": "/content-assets/history/ancient-india/indus-valley-civilization/assets/indus-great-bath.mp4"
+  },
+  {
+    "assetId": "indus-valley-notes-b21a",
+    "type": "document",
+    "title": "Indus Valley Notes",
+    "origin": "manual",
+    "file": "indus-valley-notes-Success-Series-Sample.pdf",
+    "metadata": {
+      "alt": "",
+      "tags": []
+    },
+    "path": "history/ancient-india/indus-valley-civilization/assets/indus-valley-notes",
+    "resourceKey": "/content-assets/history/ancient-india/indus-valley-civilization/assets/indus-valley-notes-Success-Series-Sample.pdf"
+  },
+  {
+    "assetId": "indus-valley-sitemap-eaa2",
+    "type": "image",
+    "title": "Indus Valley Sitemap",
+    "origin": "manual",
+    "file": "indusvalley-sitemap.webp",
+    "metadata": {
+      "alt": "",
+      "tags": []
+    },
+    "path": "history/ancient-india/indus-valley-civilization/assets/indus-valley-sitemap",
+    "resourceKey": "/content-assets/history/ancient-india/indus-valley-civilization/assets/indusvalley-sitemap.webp"
+  }
+]

@@ -22,7 +22,7 @@ export function toContents(documents: VeliteContentDocument[]): Content[] {
       variants: {
         [document.locale]: variant,
       },
-      assetRefs: [],
+      assetRefs: document.assetRefs,
     };
 
     contentMap.set(document.contentId, content);

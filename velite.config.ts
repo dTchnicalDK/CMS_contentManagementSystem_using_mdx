@@ -13,6 +13,11 @@ type ContentForValidation = {
   syllabusRefs: SyllabusNodeRef[];
 };
 
+type AssetForValidation = {
+  assetId: string;
+  path: string;
+};
+
 //----------------- Compare syllabus references across locale variants----------------------------
 function areSyllabusRefsEqual(
   a: SyllabusNodeRef[],
@@ -93,6 +98,36 @@ function validateContentIntegrity(contents: ContentForValidation[]): void {
   }
 }
 
+// ---------function to validate unique asset id---( Collection-level asset integrity validation)-------------
+function validateAssetIntegrity(assets: AssetForValidation[]): void {
+  const assetIdToPath = new Map<string, string>();
+
+  for (const asset of assets) {
+    const existingPath = assetIdToPath.get(asset.assetId);
+
+    // Rule: assetId must be globally unique. Since assetId is generated
+    // (slug + short hash) rather than hand-typed, a collision almost
+    // always means a file was copy-pasted without regenerating the id.
+    if (existingPath && existingPath !== asset.path) {
+      throw new Error(
+        `Duplicate asset ID "${asset.assetId}" found in:
+- ${existingPath}
+- ${asset.path}`,
+      );
+    }
+
+    assetIdToPath.set(asset.assetId, asset.path);
+  }
+}
+
+// ------------helper function - derive the public-facing resourceKey for an asset------------
+const PUBLIC_ASSET_BASE = "/content-assets";
+
+function getResourceKey(path: string, file: string): string {
+  const folder = path.replace(/\/[^/]+$/, ""); // strip the yml's own filename
+  return `${PUBLIC_ASSET_BASE}/${folder}/${file}`;
+}
+
 // ------------helper function- decide hindi/english version of content------------
 
 const getLocaleFromPath = (path: string): Locale => {
@@ -143,13 +178,63 @@ const contents = defineCollection({
     })),
 });
 
+// --------------------------------assets--------------
+const assets = defineCollection({
+  name: "Asset",
+  pattern: "**/assets/*.yml",
+
+  schema: s
+    .object({
+      assetId: s.string(),
+
+      type: s.enum([
+        "image",
+        "video",
+        "audio",
+        "document",
+        "timeline",
+        "concept-map",
+        "diagram",
+      ]),
+
+      title: s.string(),
+      description: s.string().optional(),
+
+      origin: s.enum(["manual", "ai-generated", "ai-assisted", "imported"]),
+
+      // The filename of the actual media file, expected to sit in the
+      // SAME folder as this .yml descriptor. resourceKey (the public URL)
+      // is derived from this + the descriptor's own path — never
+      // hand-typed, so it can never drift from where the file actually is.
+      file: s.string(),
+
+      metadata: s
+        .object({
+          alt: s.string().optional(),
+          source: s.string().optional(),
+          author: s.string().optional(),
+          license: s.string().optional(),
+          tags: s.array(s.string()).optional(),
+        })
+        .default({}),
+
+      path: s.path(),
+    })
+    .transform((data) => ({
+      ...data,
+      resourceKey: getResourceKey(data.path, data.file),
+    })),
+});
+
 export default defineConfig({
   root: "content",
 
   collections: {
     contents,
+    assets,
   },
   prepare(data) {
     validateContentIntegrity(data.contents); //for checking if contentid and folder structure is unique. (Collection-level integrity validation)
+    validateAssetIntegrity(data.assets); //for checking assetId is globally unique. (Collection-level integrity validation)
   },
 });

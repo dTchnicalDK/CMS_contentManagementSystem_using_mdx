@@ -6,3 +6,6 @@ type Collections = typeof __vc.collections
 
 export type Content = Collections['contents']['schema']['_output']
 export declare const contents: Content[]
+
+export type Asset = Collections['assets']['schema']['_output']
+export declare const assets: Asset[]
