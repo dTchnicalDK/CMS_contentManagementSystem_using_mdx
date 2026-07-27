@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "content:build": "velite && tsx scripts/sync-assets.ts",
+    "assets:scan": "tsx scripts/scan-assets.ts",
     "start": "next start",
     "lint": "eslint"
   },
