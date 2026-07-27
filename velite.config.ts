@@ -3,6 +3,7 @@ import type {
   SyllabusNodeRef,
   Locale,
 } from "./src/content-engine/domain/content";
+import type { AssetReference } from "./src/content-engine/domain/asset";
 
 // ------------types declaration section------------
 
@@ -11,6 +12,7 @@ type ContentForValidation = {
   locale: Locale;
   path: string;
   syllabusRefs: SyllabusNodeRef[];
+  assetRefs: AssetReference[];
 };
 
 type AssetForValidation = {
@@ -32,6 +34,21 @@ function areSyllabusRefsEqual(
   });
 }
 
+//----------------- Compare asset references across locale variants----------------------------
+// Deliberately ignores `caption`: captions are translatable text and are
+// allowed to differ per locale. assetId + order must match — a lesson's
+// English and Hindi variants must point at the same underlying assets,
+// in the same order.
+function areAssetRefsEqual(a: AssetReference[], b: AssetReference[]): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return a.every((ref, index) => {
+    return ref.assetId === b[index].assetId && ref.order === b[index].order;
+  });
+}
+
 // ---------functions to validate unique content id---( Collection-level content integrity validation)-------------
 function getContentFolder(path: string): string {
   return path.replace(/\/page(?:\.hi)?$/, "");
@@ -42,6 +59,7 @@ function validateContentIntegrity(contents: ContentForValidation[]): void {
   const folderToContentId = new Map<string, string>();
   const seenVariants = new Set<string>();
   const contentIdToSyllabusRefs = new Map<string, SyllabusNodeRef[]>();
+  const contentIdToAssetRefs = new Map<string, AssetReference[]>();
 
   for (const content of contents) {
     const folder = getContentFolder(content.path);
@@ -92,6 +110,22 @@ function validateContentIntegrity(contents: ContentForValidation[]): void {
 
     if (!existingRefs) {
       contentIdToSyllabusRefs.set(content.contentId, content.syllabusRefs);
+    }
+
+    // Rule 5: same contentId → same assetRefs (assetId + order; caption may differ per locale)
+    const existingAssetRefs = contentIdToAssetRefs.get(content.contentId);
+
+    if (
+      existingAssetRefs &&
+      !areAssetRefsEqual(existingAssetRefs, content.assetRefs)
+    ) {
+      throw new Error(
+        `Content ID "${content.contentId}" has inconsistent asset references across locale variants.`,
+      );
+    }
+
+    if (!existingAssetRefs) {
+      contentIdToAssetRefs.set(content.contentId, content.assetRefs);
     }
 
     seenVariants.add(variantKey);
