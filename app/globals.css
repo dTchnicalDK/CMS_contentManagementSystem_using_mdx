@@ -1,26 +1,76 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f3;
+  --foreground: #1c2333;
+  --card: #ffffff;
+  --card-foreground: #1c2333;
+  --muted: #f1ede3;
+  --muted-foreground: #6b7280;
+  --accent: #8b2635;
+  --accent-foreground: #faf8f3;
+  --border: #e4dfd2;
+}
+
+.dark {
+  --background: #14171f;
+  --foreground: #e9e7df;
+  --card: #1b1f29;
+  --card-foreground: #e9e7df;
+  --muted: #1f2430;
+  --muted-foreground: #9ca3af;
+  --accent: #d08a94;
+  --accent-foreground: #14171f;
+  --border: #2b303c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --font-serif: var(--font-source-serif), var(--font-tiro-devanagari), serif;
+  --font-sans: var(--font-hind), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.prose-content h1,
+.prose-content h2,
+.prose-content h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--foreground);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-content h1 {
+  font-size: 1.75rem;
+}
+.prose-content h2 {
+  font-size: 1.375rem;
+}
+.prose-content h3 {
+  font-size: 1.125rem;
+}
+
+.prose-content p {
+  margin-bottom: 1.25rem;
+}
+
+.prose-content a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
