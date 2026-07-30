@@ -197,7 +197,7 @@ const contents = defineCollection({
           s.object({
             assetId: s.string(),
             order: s.number().default(0),
-            caption: s.string().optional(),
+            // caption: s.string().optional(),
           }),
         )
         .default([]),

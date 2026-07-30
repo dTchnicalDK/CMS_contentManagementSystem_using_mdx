@@ -32,18 +32,4 @@ export class LessonAssembler {
 
     return assets.filter((asset): asset is Asset => asset !== null);
   }
-
-  // private async loadAssets(content: Content): Promise<Asset[]> {
-  //   const assets: Asset[] = [];
-
-  //   for (const ref of content.assetRefs) {
-  //     const asset = await this.assetProvider.getById(ref.assetId);
-
-  //     if (asset) {
-  //       assets.push(asset);
-  //     }
-  //   }
-
-  //   return assets;
-  // }
 }

@@ -1,22 +1,18 @@
-import Image from "next/image";
 import type { Lesson } from "./domain/lesson";
 import type { Asset } from "./domain/asset";
 import type { ContentVariant } from "./domain/content";
 import { MdxContent } from "./mdx-content";
+import { ImageLightbox } from "./image-lightbox";
 
 function AssetBlock({ asset }: { asset: Asset }) {
   if (asset.type === "image" || asset.type === "diagram") {
     return (
       <figure className="my-6 max-w-sm">
-        <div className="relative aspect-4/3 overflow-hidden rounded-md border border-border bg-muted">
-          <Image
-            src={asset.resourceKey}
-            alt={asset.metadata.alt ?? asset.title}
-            fill
-            sizes="(max-width: 384px) 100vw, 384px"
-            className="object-cover"
-          />
-        </div>
+        <ImageLightbox
+          src={asset.resourceKey}
+          alt={asset.metadata.alt ?? asset.title}
+          title={asset.title}
+        />
         <figcaption className="mt-2 text-sm italic text-muted-foreground">
           {asset.title}
         </figcaption>
@@ -73,9 +69,31 @@ export function LessonView({
   variant: ContentVariant;
 }) {
   const assetsById = new Map(lesson.assets.map((a) => [a.assetId, a]));
-  const orderedRefs = [...lesson.content.assetRefs].sort(
-    (a, b) => a.order - b.order,
-  );
+
+  function AssetRef({ id, caption }: { id: string; caption?: string }) {
+    const asset = assetsById.get(id);
+
+    if (!asset) {
+      return (
+        <div className="my-6 rounded-md border-2 border-dashed border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          Unknown asset id: <code>{id}</code>. Check it matches an entry in this
+          content&apos;s <code>assetRefs</code> and a real asset&apos;s{" "}
+          <code>assetId</code>.
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <AssetBlock asset={asset} />
+        {caption && (
+          <p className="-mt-4 mb-6 max-w-sm text-sm text-muted-foreground">
+            {caption}
+          </p>
+        )}
+      </>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-2xl bg-background px-6 py-16 text-foreground">
@@ -91,27 +109,8 @@ export function LessonView({
       </p>
 
       <article className="prose-content max-w-none text-base leading-[1.75]">
-        <MdxContent code={variant.body.value} />
+        <MdxContent code={variant.body.value} components={{ AssetRef }} />
       </article>
-
-      {orderedRefs.length > 0 && (
-        <section className="mt-4">
-          {orderedRefs.map((ref) => {
-            const asset = assetsById.get(ref.assetId);
-            if (!asset) return null;
-            return (
-              <div key={ref.assetId}>
-                <AssetBlock asset={asset} />
-                {ref.caption && (
-                  <p className="-mt-4 mb-6 max-w-sm text-sm text-muted-foreground">
-                    {ref.caption}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </section>
-      )}
     </main>
   );
 }

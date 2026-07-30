@@ -53,6 +53,4 @@ export type AssetReference = {
   assetId: string;
 
   order: number;
-
-  caption?: string;
 };
