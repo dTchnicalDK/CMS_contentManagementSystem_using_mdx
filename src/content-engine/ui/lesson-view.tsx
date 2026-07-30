@@ -1,8 +1,57 @@
-import type { Lesson } from "./domain/lesson";
-import type { Asset } from "./domain/asset";
-import type { ContentVariant } from "./domain/content";
-import { MdxContent } from "./mdx-content";
+import Link from "next/link";
+import { compileMdx } from "./mdx-content";
 import { ImageLightbox } from "./image-lightbox";
+import { Asset } from "../domain/asset";
+import { Lesson } from "../domain/lesson";
+import { ContentVariant, Locale } from "../domain/content";
+import { TableOfContents } from "../table-of-contents";
+
+const LOCALE_LABELS: Record<Locale, string> = {
+  en: "English",
+  hi: "हिन्दी",
+};
+
+// Fixed display order, independent of object key insertion order.
+const LOCALE_ORDER: Locale[] = ["en", "hi"];
+
+function LocaleSwitcher({
+  contentId,
+  availableLocales,
+  activeLocale,
+}: {
+  contentId: string;
+  availableLocales: Locale[];
+  activeLocale: Locale;
+}) {
+  if (availableLocales.length < 2) return null;
+
+  const ordered = LOCALE_ORDER.filter((l) => availableLocales.includes(l));
+
+  return (
+    <nav
+      aria-label="Language"
+      className="mb-8 inline-flex gap-1 rounded-md border border-border p-1"
+    >
+      {ordered.map((locale) => {
+        const isActive = locale === activeLocale;
+        return (
+          <Link
+            key={locale}
+            href={`/lesson/${contentId}?locale=${locale}`}
+            aria-current={isActive ? "true" : undefined}
+            className={
+              isActive
+                ? "rounded bg-accent px-3 py-1 text-sm font-medium text-accent-foreground"
+                : "rounded px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+            }
+          >
+            {LOCALE_LABELS[locale]}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
 function AssetBlock({ asset }: { asset: Asset }) {
   if (asset.type === "image" || asset.type === "diagram") {
@@ -61,7 +110,7 @@ function AssetBlock({ asset }: { asset: Asset }) {
   );
 }
 
-export function LessonView({
+export async function LessonView({
   lesson,
   variant,
 }: {
@@ -95,6 +144,8 @@ export function LessonView({
     );
   }
 
+  const { Content, toc } = await compileMdx(variant.body.value);
+
   return (
     <main className="mx-auto max-w-2xl bg-background px-6 py-16 text-foreground">
       <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-accent">
@@ -108,8 +159,16 @@ export function LessonView({
         {lesson.content.syllabusRefs.map((r) => r.path).join(" · ")}
       </p>
 
+      <LocaleSwitcher
+        contentId={lesson.content.contentId}
+        availableLocales={Object.keys(lesson.content.variants) as Locale[]}
+        activeLocale={variant.locale}
+      />
+
+      <TableOfContents toc={toc} />
+
       <article className="prose-content max-w-none text-base leading-[1.75]">
-        <MdxContent code={variant.body.value} components={{ AssetRef }} />
+        <Content components={{ AssetRef }} />
       </article>
     </main>
   );

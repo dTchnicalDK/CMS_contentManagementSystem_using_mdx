@@ -1,4 +1,7 @@
 import { defineCollection, defineConfig, s } from "velite";
+import { remarkMdxToc } from "remark-mdx-toc";
+import rehypeSlug from "rehype-slug";
+import type { Pluggable } from "unified";
 import type {
   SyllabusNodeRef,
   Locale,
@@ -35,10 +38,9 @@ function areSyllabusRefsEqual(
 }
 
 //----------------- Compare asset references across locale variants----------------------------
-// Deliberately ignores `caption`: captions are translatable text and are
-// allowed to differ per locale. assetId + order must match — a lesson's
-// English and Hindi variants must point at the same underlying assets,
-// in the same order.
+// A lesson's English and Hindi variants must reference the same assets,
+// in the same order. Per-locale captions are authored inline via
+// <AssetRef caption="..." /> in the MDX body, not stored here.
 function areAssetRefsEqual(a: AssetReference[], b: AssetReference[]): boolean {
   if (a.length !== b.length) {
     return false;
@@ -112,7 +114,7 @@ function validateContentIntegrity(contents: ContentForValidation[]): void {
       contentIdToSyllabusRefs.set(content.contentId, content.syllabusRefs);
     }
 
-    // Rule 5: same contentId → same assetRefs (assetId + order; caption may differ per locale)
+    // Rule 5: same contentId → same assetRefs (assetId + order)
     const existingAssetRefs = contentIdToAssetRefs.get(content.contentId);
 
     if (
@@ -197,14 +199,20 @@ const contents = defineCollection({
           s.object({
             assetId: s.string(),
             order: s.number().default(0),
-            // caption: s.string().optional(),
           }),
         )
         .default([]),
 
       path: s.path(),
 
-      body: s.mdx(),
+      body: s.mdx({
+        // remark-mdx-toc's types are built against an older `unified`
+        // version than what's installed; the plugin itself works
+        // correctly (verified against real build output), only its
+        // types are stale.
+        remarkPlugins: [remarkMdxToc as Pluggable],
+        rehypePlugins: [rehypeSlug],
+      }),
     })
     .transform((data) => ({
       ...data,

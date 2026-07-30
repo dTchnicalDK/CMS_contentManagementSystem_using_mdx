@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { lessonAssembler } from "@/src/content-engine/container";
-import { LessonView } from "@/src/content-engine/lesson-view";
+import { LessonView } from "@/src/content-engine/ui/lesson-view";
 import type { Locale } from "@/src/content-engine/domain/content";
 
 export default async function LessonPage({
