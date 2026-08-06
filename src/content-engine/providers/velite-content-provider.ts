@@ -18,10 +18,13 @@ export class VeliteContentProvider implements ContentProvider {
 
   private readonly syllabusIndex = new Map<string, Content[]>();
 
+  private readonly examIndex = new Map<string, Content[]>();
+
   private buildIndexes(): void {
     this.buildContentIndex();
     this.buildVariantIndex();
     this.buildSyllabusIndex();
+    this.buildExamIndex();
   }
 
   constructor() {
@@ -58,6 +61,28 @@ export class VeliteContentProvider implements ContentProvider {
       }
     }
   }
+  //build exam index (for related-content lookups)
+  private buildExamIndex(): void {
+    for (const content of this.contents) {
+      const exams = new Set(content.syllabusRefs.map((ref) => ref.exam));
+
+      for (const exam of exams) {
+        const existing = this.examIndex.get(exam);
+
+        if (existing) {
+          existing.push(content);
+        } else {
+          this.examIndex.set(exam, [content]);
+        }
+      }
+    }
+  }
+
+  private getParentPath(path: string): string {
+    const segments = path.split("/");
+    return segments.slice(0, -1).join("/");
+  }
+
   //build syllabus index
   private buildSyllabusIndex(): void {
     for (const content of this.contents) {
@@ -92,5 +117,24 @@ export class VeliteContentProvider implements ContentProvider {
     const key = this.getSyllabusKey(ref);
 
     return this.syllabusIndex.get(key) ?? [];
+  }
+
+  async getRelated(
+    ref: SyllabusNodeRef,
+    excludeContentId: string,
+    limit = 5,
+  ): Promise<Content[]> {
+    const sameExam = this.examIndex.get(ref.exam) ?? [];
+    const parentPath = this.getParentPath(ref.path);
+
+    const related = sameExam.filter((content) => {
+      if (content.contentId === excludeContentId) return false;
+
+      return content.syllabusRefs.some(
+        (r) => r.exam === ref.exam && this.getParentPath(r.path) === parentPath,
+      );
+    });
+
+    return related.slice(0, limit);
   }
 }

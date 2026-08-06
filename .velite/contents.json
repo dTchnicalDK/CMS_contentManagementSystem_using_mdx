@@ -52,5 +52,19 @@
     "path": "history/ancient-india/indus-valley-civilization/page",
     "body": "const{Fragment:e,jsx:t,jsxs:n}=arguments[0];function _createMdxContent(i){const a={h1:\"h1\",h2:\"h2\",h3:\"h3\",p:\"p\",...i.components},{AssetRef:s}=a;return s||function(e,t){throw new Error(\"Expected \"+(t?\"component\":\"object\")+\" `\"+e+\"` to be defined: you likely forgot to import, pass, or provide it.\")}(\"AssetRef\",!0),n(e,{children:[t(a.h1,{id:\"indus-valley-civilization\",children:\"Indus Valley Civilization\"}),\"\\n\",t(a.p,{children:\"The Indus Valley Civilization was one of the earliest urban civilizations in the world, known for its advanced city planning. Its major cities, including Harappa and Mohenjo-daro, were laid out on a precise grid, with wide streets running north-south and east-west.\"}),\"\\n\",t(s,{id:\"indusvalley-sitemap-279e\",caption:\"Map of major Indus Valley Civilization sites.\"}),\"\\n\",t(a.p,{children:\"One of the civilization's most striking achievements was its drainage system. Nearly every house had access to covered drains that carried wastewater away from the city, a level of urban sanitation not matched in the region for centuries afterward.\"}),\"\\n\",t(s,{id:\"indus-great-bath-8da7\",caption:\"The Great Bath at Mohenjo-daro.\"}),\"\\n\",t(a.p,{children:\"For a deeper dive into the archaeological findings, see the study notes below.\"}),\"\\n\",t(s,{id:\"indus-valley-notes-success-series-sample-91db\"}),\"\\n\",t(a.h2,{id:\"city-planning\",children:\"City Planning,\"}),\"\\n\",t(a.p,{children:\"this secction is solely depned upon what kind of city palanning was used in that time. what is better or as competent as today or not\"}),\"\\n\",t(a.h2,{id:\"drainage-system\",children:\"Drainage System\"}),\"\\n\",t(a.p,{children:\"the concreted drainage and covered style drainage system is really uniqe.\"}),\"\\n\",t(a.h3,{id:\"this-h3-is-just-for-testing-purpose\",children:\"this h3 is just for testing purpose\"})]})}return{toc:[{depth:1,value:\"Indus Valley Civilization\",attributes:{},children:[{depth:2,value:\"City Planning,\",attributes:{},children:[]},{depth:2,value:\"Drainage System\",attributes:{},children:[{depth:3,value:\"this h3 is just for testing purpose\",attributes:{},children:[]}]}]}],default:function(e={}){const{wrapper:n}=e.components||{};return n?t(n,{...e,children:t(_createMdxContent,{...e})}):_createMdxContent(e)}};",
     "locale": "en"
+  },
+  {
+    "contentId": "history.ancient.mauryan-empire",
+    "title": "Mauryan Empire",
+    "syllabusRefs": [
+      {
+        "exam": "BPSC",
+        "path": "history/ancient-india/mauryan-empire"
+      }
+    ],
+    "assetRefs": [],
+    "path": "history/ancient-india/mauryan-empire/page",
+    "body": "const{Fragment:e,jsx:n,jsxs:t}=arguments[0];function _createMdxContent(r){const a={h1:\"h1\",p:\"p\",...r.components};return t(e,{children:[n(a.h1,{id:\"mauryan-empire\",children:\"Mauryan Empire\"}),\"\\n\",n(a.p,{children:\"The Mauryan Empire was one of the largest empires of ancient India.\"})]})}return{toc:[{depth:1,value:\"Mauryan Empire\",attributes:{},children:[]}],default:function(e={}){const{wrapper:t}=e.components||{};return t?n(t,{...e,children:n(_createMdxContent,{...e})}):_createMdxContent(e)}};",
+    "locale": "en"
   }
 ]

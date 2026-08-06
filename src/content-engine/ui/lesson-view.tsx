@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { compileMdx } from "./mdx-content";
-import { ImageLightbox } from "./image-lightbox";
-import { Asset } from "../domain/asset";
-import { Lesson } from "../domain/lesson";
 import { ContentVariant, Locale } from "../domain/content";
+import { Asset } from "../domain/asset";
 import { TableOfContents } from "../table-of-contents";
+import { Lesson } from "../domain/lesson";
+import { ImageLightbox } from "./image-lightbox";
 
 const LOCALE_LABELS: Record<Locale, string> = {
   en: "English",
@@ -113,9 +113,11 @@ function AssetBlock({ asset }: { asset: Asset }) {
 export async function LessonView({
   lesson,
   variant,
+  related = [],
 }: {
   lesson: Lesson;
   variant: ContentVariant;
+  related?: { contentId: string; title: string }[];
 }) {
   const assetsById = new Map(lesson.assets.map((a) => [a.assetId, a]));
 
@@ -170,6 +172,29 @@ export async function LessonView({
       <article className="prose-content max-w-none text-base leading-[1.75]">
         <Content components={{ AssetRef }} />
       </article>
+
+      {related.length > 0 && (
+        <nav
+          aria-label="Related topics"
+          className="mt-12 border-t border-border pt-6"
+        >
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-accent">
+            Related Topics
+          </p>
+          <ul className="space-y-2">
+            {related.map((r) => (
+              <li key={r.contentId}>
+                <Link
+                  href={`/lesson/${r.contentId}?locale=${variant.locale}`}
+                  className="text-sm text-foreground hover:text-accent hover:underline"
+                >
+                  {r.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </main>
   );
 }
